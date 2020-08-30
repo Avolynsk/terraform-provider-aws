@@ -35,7 +35,7 @@ The following arguments are supported:
 * `end_date` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to no longer run the maintenance window.
 * `schedule_timezone` - (Optional) Timezone for schedule in [Internet Assigned Numbers Authority (IANA) Time Zone Database format](https://www.iana.org/time-zones). For example: `America/Los_Angeles`, `etc/UTC`, or `Asia/Seoul`.
 * `start_date` - (Optional) Timestamp in [ISO-8601 extended format](https://www.iso.org/iso-8601-date-and-time-format.html) when to begin the maintenance window.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource.
 
 ## Attributes Reference
 
@@ -44,7 +44,9 @@ In addition to all arguments above, the following attributes are exported:
 * `id` - The ID of the maintenance window.
 
 ## Import
+
 SSM  Maintenance Windows can be imported using the `maintenance window id`, e.g.
+
 ```
 $ terraform import aws_ssm_maintenance_window.imported-window mw-0123456789
 ```

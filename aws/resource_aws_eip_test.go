@@ -4,15 +4,16 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"regexp"
 	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 // Implement a test sweeper for EIPs.
@@ -275,37 +276,28 @@ func TestAccAWSEIP_associated_user_private_ip(t *testing.T) {
 
 // Regression test for https://github.com/hashicorp/terraform/issues/3429 (now
 // https://github.com/terraform-providers/terraform-provider-aws/issues/42)
-func TestAccAWSEIP_classic_disassociate(t *testing.T) {
-	oldvar := os.Getenv("AWS_DEFAULT_REGION")
-	os.Setenv("AWS_DEFAULT_REGION", "us-east-1")
-	defer os.Setenv("AWS_DEFAULT_REGION", oldvar)
+func TestAccAWSEIP_Instance_Reassociate(t *testing.T) {
+	instanceResourceName := "aws_instance.test"
+	resourceName := "aws_eip.test"
+	rName := acctest.RandomWithPrefix("tf-acc-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:     func() { testAccPreCheck(t); testAccEC2ClassicPreCheck(t) },
+		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckAWSEIPDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAWSEIP_classic_disassociate("instance-store"),
+				Config: testAccAWSEIP_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"aws_eip.test.0",
-						"instance"),
-					resource.TestCheckResourceAttrSet(
-						"aws_eip.test.1",
-						"instance"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
 				),
 			},
 			{
-				Config: testAccAWSEIP_classic_disassociate("ebs"),
+				Config: testAccAWSEIP_Instance(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrSet(
-						"aws_eip.test.0",
-						"instance"),
-					resource.TestCheckResourceAttrSet(
-						"aws_eip.test.1",
-						"instance"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance", instanceResourceName, "id"),
 				),
+				Taint: []string{resourceName},
 			},
 		},
 	})
@@ -531,6 +523,33 @@ func testAccCheckAWSEIPDestroy(s *terraform.State) error {
 	return nil
 }
 
+func TestAccAWSEIP_CustomerOwnedIpv4Pool(t *testing.T) {
+	var conf ec2.Address
+	resourceName := "aws_eip.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:      func() { testAccPreCheck(t); testAccPreCheckAWSOutpostsOutposts(t) },
+		IDRefreshName: resourceName,
+		Providers:     testAccProviders,
+		CheckDestroy:  testAccCheckAWSEIPDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSEIPConfigCustomerOwnedIpv4Pool(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSEIPExists(resourceName, &conf),
+					resource.TestMatchResourceAttr(resourceName, "customer_owned_ipv4_pool", regexp.MustCompile(`^ipv4pool-coip-.+$`)),
+					resource.TestMatchResourceAttr(resourceName, "customer_owned_ip", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSEIPAttributes(conf *ec2.Address) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.PublicIp == "" {
@@ -631,10 +650,10 @@ func testAccCheckAWSEIPPublicDNS(resourceName string) resource.TestCheckFunc {
 
 		publicIPDashed := strings.Replace(rs.Primary.Attributes["public_ip"], ".", "-", -1)
 		publicDNS := rs.Primary.Attributes["public_dns"]
-		expectedPublicDNS := fmt.Sprintf("ec2-%s.%s.compute.amazonaws.com", publicIPDashed, testAccGetRegion())
+		expectedPublicDNS := fmt.Sprintf("ec2-%s.%s.compute.%s", publicIPDashed, testAccGetRegion(), testAccGetPartitionDNSSuffix())
 
 		if testAccGetRegion() == "us-east-1" {
-			expectedPublicDNS = fmt.Sprintf("ec2-%s.compute-1.amazonaws.com", publicIPDashed)
+			expectedPublicDNS = fmt.Sprintf("ec2-%s.compute-1.%s", publicIPDashed, testAccGetPartitionDNSSuffix())
 		}
 
 		if publicDNS != expectedPublicDNS {
@@ -696,15 +715,15 @@ data "aws_ami" "amzn-ami-minimal-pv" {
 }
 
 resource "aws_instance" "test" {
-	ami = "${data.aws_ami.amzn-ami-minimal-pv.id}"
-	instance_type = "m1.small"
-	tags = {
-		Name = "testAccAWSEIPInstanceEc2Classic"
-	}
+  ami           = data.aws_ami.amzn-ami-minimal-pv.id
+  instance_type = "m1.small"
+  tags = {
+    Name = "testAccAWSEIPInstanceEc2Classic"
+  }
 }
 
 resource "aws_eip" "test" {
-	instance = "${aws_instance.test.id}"
+  instance = aws_instance.test.id
 }
 `
 
@@ -724,12 +743,12 @@ data "aws_ami" "amzn-ami-minimal-pv" {
 }
 
 resource "aws_instance" "test" {
-	ami = "${data.aws_ami.amzn-ami-minimal-pv.id}"
-	instance_type = "m1.small"
+  ami           = data.aws_ami.amzn-ami-minimal-pv.id
+  instance_type = "m1.small"
 }
 
 resource "aws_eip" "test" {
-	instance = "${aws_instance.test.id}"
+  instance = aws_instance.test.id
 }
 `
 
@@ -749,12 +768,12 @@ data "aws_ami" "amzn-ami-minimal-pv" {
 }
 
 resource "aws_instance" "test" {
-	ami = "${data.aws_ami.amzn-ami-minimal-pv.id}"
-	instance_type = "m1.small"
+  ami           = data.aws_ami.amzn-ami-minimal-pv.id
+  instance_type = "m1.small"
 }
 
 resource "aws_eip" "test" {
-	instance = "${aws_instance.test.id}"
+  instance = aws_instance.test.id
 }
 `
 
@@ -783,7 +802,7 @@ resource "aws_vpc" "default" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.default.id}"
+  vpc_id = aws_vpc.default.id
 
   tags = {
     Name = "main"
@@ -791,11 +810,11 @@ resource "aws_internet_gateway" "gw" {
 }
 
 resource "aws_subnet" "tf_test_subnet" {
-  vpc_id                  = "${aws_vpc.default.id}"
+  vpc_id                  = aws_vpc.default.id
   cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 
   tags = {
     Name = "tf-acc-eip-instance-associated"
@@ -803,11 +822,11 @@ resource "aws_subnet" "tf_test_subnet" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm.id
   instance_type = "t2.micro"
 
   private_ip = "10.0.0.12"
-  subnet_id  = "${aws_subnet.tf_test_subnet.id}"
+  subnet_id  = aws_subnet.tf_test_subnet.id
 
   tags = {
     Name = "test instance"
@@ -815,12 +834,12 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_instance" "test2" {
-  ami = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
+  ami = data.aws_ami.amzn-ami-minimal-hvm.id
 
   instance_type = "t2.micro"
 
   private_ip = "10.0.0.19"
-  subnet_id  = "${aws_subnet.tf_test_subnet.id}"
+  subnet_id  = aws_subnet.tf_test_subnet.id
 
   tags = {
     Name = "test2 instance"
@@ -830,7 +849,7 @@ resource "aws_instance" "test2" {
 resource "aws_eip" "test" {
   vpc = true
 
-  instance                  = "${aws_instance.test2.id}"
+  instance                  = aws_instance.test2.id
   associate_with_private_ip = "10.0.0.19"
 }
 `
@@ -859,7 +878,7 @@ resource "aws_vpc" "default" {
 }
 
 resource "aws_internet_gateway" "gw" {
-  vpc_id = "${aws_vpc.default.id}"
+  vpc_id = aws_vpc.default.id
 
   tags = {
     Name = "main"
@@ -867,11 +886,11 @@ resource "aws_internet_gateway" "gw" {
 }
 
 resource "aws_subnet" "tf_test_subnet" {
-  vpc_id                  = "${aws_vpc.default.id}"
+  vpc_id                  = aws_vpc.default.id
   cidr_block              = "10.0.0.0/24"
   map_public_ip_on_launch = true
 
-  depends_on = ["aws_internet_gateway.gw"]
+  depends_on = [aws_internet_gateway.gw]
 
   tags = {
     Name = "tf-acc-eip-instance-associated"
@@ -879,11 +898,11 @@ resource "aws_subnet" "tf_test_subnet" {
 }
 
 resource "aws_instance" "test" {
-  ami           = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
+  ami           = data.aws_ami.amzn-ami-minimal-hvm.id
   instance_type = "t2.micro"
 
   private_ip = "10.0.0.12"
-  subnet_id  = "${aws_subnet.tf_test_subnet.id}"
+  subnet_id  = aws_subnet.tf_test_subnet.id
 
   tags = {
     Name = "test instance"
@@ -891,12 +910,12 @@ resource "aws_instance" "test" {
 }
 
 resource "aws_instance" "test2" {
-  ami = "${data.aws_ami.amzn-ami-minimal-hvm.id}"
+  ami = data.aws_ami.amzn-ami-minimal-hvm.id
 
   instance_type = "t2.micro"
 
   private_ip = "10.0.0.19"
-  subnet_id  = "${aws_subnet.tf_test_subnet.id}"
+  subnet_id  = aws_subnet.tf_test_subnet.id
 
   tags = {
     Name = "test2 instance"
@@ -906,140 +925,127 @@ resource "aws_instance" "test2" {
 resource "aws_eip" "test" {
   vpc = true
 
-  instance                  = "${aws_instance.test.id}"
+  instance                  = aws_instance.test.id
   associate_with_private_ip = "10.0.0.12"
 }
 `
 
 const testAccAWSEIPNetworkInterfaceConfig = `
 data "aws_availability_zones" "available" {
-	state = "available"
+  state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
 
 resource "aws_vpc" "test" {
-	cidr_block = "10.0.0.0/24"
-	tags = {
-		Name = "terraform-testacc-eip-network-interface"
-	}
+  cidr_block = "10.0.0.0/24"
+  tags = {
+    Name = "terraform-testacc-eip-network-interface"
+  }
 }
 
 resource "aws_internet_gateway" "test" {
-	vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_subnet" "test" {
-  vpc_id = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
-  cidr_block = "10.0.0.0/24"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
+  cidr_block        = "10.0.0.0/24"
   tags = {
-	Name = "tf-acc-eip-network-interface"
+    Name = "tf-acc-eip-network-interface"
   }
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id = "${aws_subnet.test.id}"
-	private_ips = ["10.0.0.10"]
-  security_groups = [ "${aws_vpc.test.default_security_group_id}" ]
+  subnet_id       = aws_subnet.test.id
+  private_ips     = ["10.0.0.10"]
+  security_groups = [aws_vpc.test.default_security_group_id]
 }
 
 resource "aws_eip" "test" {
-	vpc = "true"
-	network_interface = "${aws_network_interface.test.id}"
-	depends_on = ["aws_internet_gateway.test"]
+  vpc               = "true"
+  network_interface = aws_network_interface.test.id
+  depends_on        = [aws_internet_gateway.test]
 }
 `
 
 const testAccAWSEIPMultiNetworkInterfaceConfig = `
 data "aws_availability_zones" "available" {
   state = "available"
+
+  filter {
+    name   = "opt-in-status"
+    values = ["opt-in-not-required"]
+  }
 }
-  
+
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/24"
-	tags = {
-		Name = "terraform-testacc-eip-multi-network-interface"
-	}
+  tags = {
+    Name = "terraform-testacc-eip-multi-network-interface"
+  }
 }
 
 resource "aws_internet_gateway" "test" {
-  vpc_id = "${aws_vpc.test.id}"
+  vpc_id = aws_vpc.test.id
 }
 
 resource "aws_subnet" "test" {
-  vpc_id            = "${aws_vpc.test.id}"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
+  vpc_id            = aws_vpc.test.id
+  availability_zone = data.aws_availability_zones.available.names[0]
   cidr_block        = "10.0.0.0/24"
   tags = {
-	Name = "tf-acc-eip-multi-network-interface"
+    Name = "tf-acc-eip-multi-network-interface"
   }
 }
 
 resource "aws_network_interface" "test" {
-  subnet_id       = "${aws_subnet.test.id}"
+  subnet_id       = aws_subnet.test.id
   private_ips     = ["10.0.0.10", "10.0.0.11"]
-  security_groups = ["${aws_vpc.test.default_security_group_id}"]
+  security_groups = [aws_vpc.test.default_security_group_id]
 }
 
 resource "aws_eip" "test" {
   vpc                       = "true"
-  network_interface         = "${aws_network_interface.test.id}"
+  network_interface         = aws_network_interface.test.id
   associate_with_private_ip = "10.0.0.10"
-  depends_on                = ["aws_internet_gateway.test"]
+  depends_on                = [aws_internet_gateway.test]
 }
 
 resource "aws_eip" "test2" {
   vpc                       = "true"
-  network_interface         = "${aws_network_interface.test.id}"
+  network_interface         = aws_network_interface.test.id
   associate_with_private_ip = "10.0.0.11"
-  depends_on                = ["aws_internet_gateway.test"]
+  depends_on                = [aws_internet_gateway.test]
 }
 `
 
-func testAccAWSEIP_classic_disassociate(rootDeviceType string) string {
-	return fmt.Sprintf(`
-provider "aws" {
-  region = "us-east-1"
-}
-
-variable "server_count" {
-  default = 2
-}
-
-data "aws_ami" "amzn-ami-minimal-pv" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name = "name"
-    values = ["amzn-ami-minimal-pv-*"]
-  }
-  filter {
-    name = "root-device-type"
-    values = [%q]
-  }
-}
-
-data "aws_availability_zones" "available" {
-  state = "available"
-}
-
+func testAccAWSEIP_Instance(rName string) string {
+	return composeConfig(
+		testAccLatestAmazonLinuxHvmEbsAmiConfig(),
+		testAccAvailableEc2InstanceTypeForAvailabilityZone("aws_subnet.test.availability_zone", "t3.micro", "t2.micro"),
+		fmt.Sprintf(`
 resource "aws_eip" "test" {
-  count    = "${var.server_count}"
-  instance = "${element(aws_instance.example.*.id, count.index)}"
+  instance = aws_instance.test.id
   vpc      = true
-}
-
-resource "aws_instance" "example" {
-  count = "${var.server_count}"
-
-  ami                         = "${data.aws_ami.amzn-ami-minimal-pv.id}"
-  instance_type               = "m1.small"
-  associate_public_ip_address = true
-  subnet_id                   = "${aws_subnet.us-east-1-0-public.id}"
-  availability_zone           = "${aws_subnet.us-east-1-0-public.availability_zone}"
 
   tags = {
-    Name = "testAccAWSEIP_classic_disassociate"
+    Name = %[1]q
+  }
+}
+
+resource "aws_instance" "test" {
+  ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  associate_public_ip_address = true
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  subnet_id                   = aws_subnet.test.id
+
+  tags = {
+    Name = %[1]q
   }
 
   lifecycle {
@@ -1047,41 +1053,49 @@ resource "aws_instance" "example" {
   }
 }
 
-resource "aws_vpc" "example" {
+resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
-	tags = {
-		Name = "terraform-testacc-eip-classic-disassociate"
-	}
-}
 
-resource "aws_internet_gateway" "example" {
-  vpc_id = "${aws_vpc.example.id}"
-}
-
-resource "aws_subnet" "us-east-1-0-public" {
-  vpc_id = "${aws_vpc.example.id}"
-
-  cidr_block        = "10.0.0.0/24"
-  availability_zone = "${data.aws_availability_zones.available.names[0]}"
   tags = {
-    Name = "tf-acc-eip-classic-disassociate"
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table" "us-east-1-public" {
-  vpc_id = "${aws_vpc.example.id}"
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_subnet" "test" {
+  cidr_block = "10.0.0.0/24"
+  vpc_id     = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
 
   route {
     cidr_block = "0.0.0.0/0"
-    gateway_id = "${aws_internet_gateway.example.id}"
+    gateway_id = aws_internet_gateway.test.id
+  }
+
+  tags = {
+    Name = %[1]q
   }
 }
 
-resource "aws_route_table_association" "us-east-1-0-public" {
-  subnet_id      = "${aws_subnet.us-east-1-0-public.id}"
-  route_table_id = "${aws_route_table.us-east-1-public.id}"
+resource "aws_route_table_association" "test" {
+  subnet_id      = aws_subnet.test.id
+  route_table_id = aws_route_table.test.id
 }
-`, rootDeviceType)
+`, rName))
 }
 
 const testAccAWSEIPAssociate_not_associated = `
@@ -1100,8 +1114,8 @@ data "aws_ami" "amzn-ami-minimal-pv" {
 }
 
 resource "aws_instance" "test" {
-	ami = "${data.aws_ami.amzn-ami-minimal-pv.id}"
-	instance_type = "m1.small"
+  ami           = data.aws_ami.amzn-ami-minimal-pv.id
+  instance_type = "m1.small"
 }
 
 resource "aws_eip" "test" {
@@ -1124,11 +1138,22 @@ data "aws_ami" "amzn-ami-minimal-pv" {
 }
 
 resource "aws_instance" "test" {
-	ami = "${data.aws_ami.amzn-ami-minimal-pv.id}"
-	instance_type = "m1.small"
+  ami           = data.aws_ami.amzn-ami-minimal-pv.id
+  instance_type = "m1.small"
 }
 
 resource "aws_eip" "test" {
-	instance = "${aws_instance.test.id}"
+	instance = aws_instance.test.id
 }
 `
+
+func testAccAWSEIPConfigCustomerOwnedIpv4Pool() string {
+	return `
+data "aws_ec2_coip_pools" "test" {}
+
+resource "aws_eip" "test" {
+  customer_owned_ipv4_pool = tolist(data.aws_ec2_coip_pools.test.pool_ids)[0]
+  vpc                      = true
+}
+`
+}

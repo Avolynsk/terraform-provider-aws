@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
@@ -51,6 +51,28 @@ func TestAccAWSAPIGatewayRequestValidator_basic(t *testing.T) {
 				ImportState:       true,
 				ImportStateIdFunc: testAccAWSAPIGatewayRequestValidatorImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccAWSAPIGatewayRequestValidator_disappears(t *testing.T) {
+	var conf apigateway.UpdateRequestValidatorOutput
+	rName := fmt.Sprintf("tf-test-acc-%s", acctest.RandString(8))
+	resourceName := "aws_api_gateway_request_validator.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayRequestValidatorDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayRequestValidatorConfig(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayRequestValidatorExists(resourceName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayRequestValidator(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -103,7 +125,7 @@ func testAccCheckAWSAPIGatewayRequestValidatorExists(n string, res *apigateway.U
 			return fmt.Errorf("No API Request Validator ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetRequestValidatorInput{
 			RequestValidatorId: aws.String(rs.Primary.ID),
@@ -121,7 +143,7 @@ func testAccCheckAWSAPIGatewayRequestValidatorExists(n string, res *apigateway.U
 }
 
 func testAccCheckAWSAPIGatewayRequestValidatorDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_request_validator" {

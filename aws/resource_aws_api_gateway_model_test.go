@@ -7,9 +7,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
@@ -47,6 +47,30 @@ func TestAccAWSAPIGatewayModel_basic(t *testing.T) {
 	})
 }
 
+func TestAccAWSAPIGatewayModel_disappears(t *testing.T) {
+	var conf apigateway.Model
+	rInt := acctest.RandString(10)
+	rName := fmt.Sprintf("tf-acc-test-%s", rInt)
+	modelName := fmt.Sprintf("tfacctest%s", rInt)
+	resourceName := "aws_api_gateway_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { testAccPreCheck(t) },
+		Providers:    testAccProviders,
+		CheckDestroy: testAccCheckAWSAPIGatewayModelDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSAPIGatewayModelConfig(rName, modelName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAWSAPIGatewayModelExists(resourceName, modelName, &conf),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayModel(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAWSAPIGatewayModelAttributes(conf *apigateway.Model, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if *conf.Name != name {
@@ -74,7 +98,7 @@ func testAccCheckAWSAPIGatewayModelExists(n, rName string, res *apigateway.Model
 			return fmt.Errorf("No API Gateway Model ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetModelInput{
 			ModelName: aws.String(rName),
@@ -95,7 +119,7 @@ func testAccCheckAWSAPIGatewayModelExists(n, rName string, res *apigateway.Model
 }
 
 func testAccCheckAWSAPIGatewayModelDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_model" {

@@ -1740,6 +1740,88 @@ func (c *XRay) GetTraceSummariesPagesWithContext(ctx aws.Context, input *GetTrac
 	return p.Err()
 }
 
+const opListTagsForResource = "ListTagsForResource"
+
+// ListTagsForResourceRequest generates a "aws/request.Request" representing the
+// client's request for the ListTagsForResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See ListTagsForResource for more information on using the ListTagsForResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the ListTagsForResourceRequest method.
+//    req, resp := client.ListTagsForResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/ListTagsForResource
+func (c *XRay) ListTagsForResourceRequest(input *ListTagsForResourceInput) (req *request.Request, output *ListTagsForResourceOutput) {
+	op := &request.Operation{
+		Name:       opListTagsForResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/ListTagsForResource",
+	}
+
+	if input == nil {
+		input = &ListTagsForResourceInput{}
+	}
+
+	output = &ListTagsForResourceOutput{}
+	req = c.newRequest(op, input, output)
+	return
+}
+
+// ListTagsForResource API operation for AWS X-Ray.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS X-Ray's
+// API operation ListTagsForResource for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is missing required parameters or has invalid parameters.
+//
+//   * ThrottledException
+//   The request exceeds the maximum number of requests per second.
+//
+//   * ResourceNotFoundException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/ListTagsForResource
+func (c *XRay) ListTagsForResource(input *ListTagsForResourceInput) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	return out, req.Send()
+}
+
+// ListTagsForResourceWithContext is the same as ListTagsForResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See ListTagsForResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *XRay) ListTagsForResourceWithContext(ctx aws.Context, input *ListTagsForResourceInput, opts ...request.Option) (*ListTagsForResourceOutput, error) {
+	req, out := c.ListTagsForResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
 const opPutEncryptionConfig = "PutEncryptionConfig"
 
 // PutEncryptionConfigRequest generates a "aws/request.Request" representing the
@@ -2027,6 +2109,174 @@ func (c *XRay) PutTraceSegments(input *PutTraceSegmentsInput) (*PutTraceSegments
 // for more information on using Contexts.
 func (c *XRay) PutTraceSegmentsWithContext(ctx aws.Context, input *PutTraceSegmentsInput, opts ...request.Option) (*PutTraceSegmentsOutput, error) {
 	req, out := c.PutTraceSegmentsRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opTagResource = "TagResource"
+
+// TagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the TagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See TagResource for more information on using the TagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the TagResourceRequest method.
+//    req, resp := client.TagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/TagResource
+func (c *XRay) TagResourceRequest(input *TagResourceInput) (req *request.Request, output *TagResourceOutput) {
+	op := &request.Operation{
+		Name:       opTagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/TagResource",
+	}
+
+	if input == nil {
+		input = &TagResourceInput{}
+	}
+
+	output = &TagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// TagResource API operation for AWS X-Ray.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS X-Ray's
+// API operation TagResource for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is missing required parameters or has invalid parameters.
+//
+//   * ThrottledException
+//   The request exceeds the maximum number of requests per second.
+//
+//   * ResourceNotFoundException
+//
+//   * TooManyTagsException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/TagResource
+func (c *XRay) TagResource(input *TagResourceInput) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	return out, req.Send()
+}
+
+// TagResourceWithContext is the same as TagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See TagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *XRay) TagResourceWithContext(ctx aws.Context, input *TagResourceInput, opts ...request.Option) (*TagResourceOutput, error) {
+	req, out := c.TagResourceRequest(input)
+	req.SetContext(ctx)
+	req.ApplyOptions(opts...)
+	return out, req.Send()
+}
+
+const opUntagResource = "UntagResource"
+
+// UntagResourceRequest generates a "aws/request.Request" representing the
+// client's request for the UntagResource operation. The "output" return
+// value will be populated with the request's response once the request completes
+// successfully.
+//
+// Use "Send" method on the returned Request to send the API call to the service.
+// the "output" return value is not valid until after Send returns without error.
+//
+// See UntagResource for more information on using the UntagResource
+// API call, and error handling.
+//
+// This method is useful when you want to inject custom logic or configuration
+// into the SDK's request lifecycle. Such as custom headers, or retry logic.
+//
+//
+//    // Example sending a request using the UntagResourceRequest method.
+//    req, resp := client.UntagResourceRequest(params)
+//
+//    err := req.Send()
+//    if err == nil { // resp is now filled
+//        fmt.Println(resp)
+//    }
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/UntagResource
+func (c *XRay) UntagResourceRequest(input *UntagResourceInput) (req *request.Request, output *UntagResourceOutput) {
+	op := &request.Operation{
+		Name:       opUntagResource,
+		HTTPMethod: "POST",
+		HTTPPath:   "/UntagResource",
+	}
+
+	if input == nil {
+		input = &UntagResourceInput{}
+	}
+
+	output = &UntagResourceOutput{}
+	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Swap(restjson.UnmarshalHandler.Name, protocol.UnmarshalDiscardBodyHandler)
+	return
+}
+
+// UntagResource API operation for AWS X-Ray.
+//
+// Returns awserr.Error for service API and SDK errors. Use runtime type assertions
+// with awserr.Error's Code and Message methods to get detailed information about
+// the error.
+//
+// See the AWS API reference guide for AWS X-Ray's
+// API operation UntagResource for usage and error information.
+//
+// Returned Error Types:
+//   * InvalidRequestException
+//   The request is missing required parameters or has invalid parameters.
+//
+//   * ThrottledException
+//   The request exceeds the maximum number of requests per second.
+//
+//   * ResourceNotFoundException
+//
+// See also, https://docs.aws.amazon.com/goto/WebAPI/xray-2016-04-12/UntagResource
+func (c *XRay) UntagResource(input *UntagResourceInput) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
+	return out, req.Send()
+}
+
+// UntagResourceWithContext is the same as UntagResource with the addition of
+// the ability to pass a context and additional request options.
+//
+// See UntagResource for details on how to use this API operation.
+//
+// The context must be non-nil and will be used for request cancellation. If
+// the context is nil a panic will occur. In the future the SDK may create
+// sub-contexts for http.Requests. See https://golang.org/pkg/context/
+// for more information on using Contexts.
+func (c *XRay) UntagResourceWithContext(ctx aws.Context, input *UntagResourceInput, opts ...request.Option) (*UntagResourceOutput, error) {
+	req, out := c.UntagResourceRequest(input)
 	req.SetContext(ctx)
 	req.ApplyOptions(opts...)
 	return out, req.Send()
@@ -2466,6 +2716,8 @@ type CreateGroupInput struct {
 	//
 	// GroupName is a required field
 	GroupName *string `min:"1" type:"string" required:"true"`
+
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -2487,6 +2739,16 @@ func (s *CreateGroupInput) Validate() error {
 	if s.GroupName != nil && len(*s.GroupName) < 1 {
 		invalidParams.Add(request.NewErrParamMinLen("GroupName", 1))
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2503,6 +2765,12 @@ func (s *CreateGroupInput) SetFilterExpression(v string) *CreateGroupInput {
 // SetGroupName sets the GroupName field's value.
 func (s *CreateGroupInput) SetGroupName(v string) *CreateGroupInput {
 	s.GroupName = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateGroupInput) SetTags(v []*Tag) *CreateGroupInput {
+	s.Tags = v
 	return s
 }
 
@@ -2538,6 +2806,8 @@ type CreateSamplingRuleInput struct {
 	//
 	// SamplingRule is a required field
 	SamplingRule *SamplingRule `type:"structure" required:"true"`
+
+	Tags []*Tag `type:"list"`
 }
 
 // String returns the string representation
@@ -2561,6 +2831,16 @@ func (s *CreateSamplingRuleInput) Validate() error {
 			invalidParams.AddNested("SamplingRule", err.(request.ErrInvalidParams))
 		}
 	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
 
 	if invalidParams.Len() > 0 {
 		return invalidParams
@@ -2571,6 +2851,12 @@ func (s *CreateSamplingRuleInput) Validate() error {
 // SetSamplingRule sets the SamplingRule field's value.
 func (s *CreateSamplingRuleInput) SetSamplingRule(v *SamplingRule) *CreateSamplingRuleInput {
 	s.SamplingRule = v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *CreateSamplingRuleInput) SetTags(v []*Tag) *CreateSamplingRuleInput {
+	s.Tags = v
 	return s
 }
 
@@ -2893,6 +3179,9 @@ func (s *EncryptionConfig) SetType(v string) *EncryptionConfig {
 type ErrorRootCause struct {
 	_ struct{} `type:"structure"`
 
+	// A flag that denotes that the root cause impacts the trace client.
+	ClientImpacting *bool `type:"boolean"`
+
 	// A list of services corresponding to an error. A service identifies a segment
 	// and it contains a name, account ID, type, and inferred flag.
 	Services []*ErrorRootCauseService `type:"list"`
@@ -2906,6 +3195,12 @@ func (s ErrorRootCause) String() string {
 // GoString returns the string representation
 func (s ErrorRootCause) GoString() string {
 	return s.String()
+}
+
+// SetClientImpacting sets the ClientImpacting field's value.
+func (s *ErrorRootCause) SetClientImpacting(v bool) *ErrorRootCause {
+	s.ClientImpacting = &v
+	return s
 }
 
 // SetServices sets the Services field's value.
@@ -3073,6 +3368,9 @@ func (s *ErrorStatistics) SetTotalCount(v int64) *ErrorStatistics {
 type FaultRootCause struct {
 	_ struct{} `type:"structure"`
 
+	// A flag that denotes that the root cause impacts the trace client.
+	ClientImpacting *bool `type:"boolean"`
+
 	// A list of corresponding services. A service identifies a segment and it contains
 	// a name, account ID, type, and inferred flag.
 	Services []*FaultRootCauseService `type:"list"`
@@ -3086,6 +3384,12 @@ func (s FaultRootCause) String() string {
 // GoString returns the string representation
 func (s FaultRootCause) GoString() string {
 	return s.String()
+}
+
+// SetClientImpacting sets the ClientImpacting field's value.
+func (s *FaultRootCause) SetClientImpacting(v bool) *FaultRootCause {
+	s.ClientImpacting = &v
+	return s
 }
 
 // SetServices sets the Services field's value.
@@ -4354,8 +4658,8 @@ func (s *InstanceIdDetail) SetId(v string) *InstanceIdDetail {
 
 // The request is missing required parameters or has invalid parameters.
 type InvalidRequestException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4372,17 +4676,17 @@ func (s InvalidRequestException) GoString() string {
 
 func newErrorInvalidRequestException(v protocol.ResponseMetadata) error {
 	return &InvalidRequestException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s InvalidRequestException) Code() string {
+func (s *InvalidRequestException) Code() string {
 	return "InvalidRequestException"
 }
 
 // Message returns the exception's message.
-func (s InvalidRequestException) Message() string {
+func (s *InvalidRequestException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4390,22 +4694,99 @@ func (s InvalidRequestException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s InvalidRequestException) OrigErr() error {
+func (s *InvalidRequestException) OrigErr() error {
 	return nil
 }
 
-func (s InvalidRequestException) Error() string {
+func (s *InvalidRequestException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s InvalidRequestException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *InvalidRequestException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s InvalidRequestException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *InvalidRequestException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
+type ListTagsForResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	NextToken *string `type:"string"`
+
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *ListTagsForResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "ListTagsForResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTagsForResourceInput) SetNextToken(v string) *ListTagsForResourceInput {
+	s.NextToken = &v
+	return s
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *ListTagsForResourceInput) SetResourceARN(v string) *ListTagsForResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+type ListTagsForResourceOutput struct {
+	_ struct{} `type:"structure"`
+
+	NextToken *string `type:"string"`
+
+	Tags []*Tag `type:"list"`
+}
+
+// String returns the string representation
+func (s ListTagsForResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ListTagsForResourceOutput) GoString() string {
+	return s.String()
+}
+
+// SetNextToken sets the NextToken field's value.
+func (s *ListTagsForResourceOutput) SetNextToken(v string) *ListTagsForResourceOutput {
+	s.NextToken = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *ListTagsForResourceOutput) SetTags(v []*Tag) *ListTagsForResourceOutput {
+	s.Tags = v
+	return s
 }
 
 type PutEncryptionConfigInput struct {
@@ -4662,9 +5043,69 @@ func (s *ResourceARNDetail) SetARN(v string) *ResourceARNDetail {
 	return s
 }
 
+type ResourceNotFoundException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	ResourceName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s ResourceNotFoundException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s ResourceNotFoundException) GoString() string {
+	return s.String()
+}
+
+func newErrorResourceNotFoundException(v protocol.ResponseMetadata) error {
+	return &ResourceNotFoundException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *ResourceNotFoundException) Code() string {
+	return "ResourceNotFoundException"
+}
+
+// Message returns the exception's message.
+func (s *ResourceNotFoundException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *ResourceNotFoundException) OrigErr() error {
+	return nil
+}
+
+func (s *ResourceNotFoundException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *ResourceNotFoundException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *ResourceNotFoundException) RequestID() string {
+	return s.RespMetadata.RequestID
+}
+
 // The root cause information for a response time warning.
 type ResponseTimeRootCause struct {
 	_ struct{} `type:"structure"`
+
+	// A flag that denotes that the root cause impacts the trace client.
+	ClientImpacting *bool `type:"boolean"`
 
 	// A list of corresponding services. A service identifies a segment and contains
 	// a name, account ID, type, and inferred flag.
@@ -4679,6 +5120,12 @@ func (s ResponseTimeRootCause) String() string {
 // GoString returns the string representation
 func (s ResponseTimeRootCause) GoString() string {
 	return s.String()
+}
+
+// SetClientImpacting sets the ClientImpacting field's value.
+func (s *ResponseTimeRootCause) SetClientImpacting(v bool) *ResponseTimeRootCause {
+	s.ClientImpacting = &v
+	return s
 }
 
 // SetServices sets the Services field's value.
@@ -4834,8 +5281,8 @@ func (s *RootCauseException) SetName(v string) *RootCauseException {
 
 // You have reached the maximum number of sampling rules.
 type RuleLimitExceededException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -4852,17 +5299,17 @@ func (s RuleLimitExceededException) GoString() string {
 
 func newErrorRuleLimitExceededException(v protocol.ResponseMetadata) error {
 	return &RuleLimitExceededException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s RuleLimitExceededException) Code() string {
+func (s *RuleLimitExceededException) Code() string {
 	return "RuleLimitExceededException"
 }
 
 // Message returns the exception's message.
-func (s RuleLimitExceededException) Message() string {
+func (s *RuleLimitExceededException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -4870,22 +5317,22 @@ func (s RuleLimitExceededException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s RuleLimitExceededException) OrigErr() error {
+func (s *RuleLimitExceededException) OrigErr() error {
 	return nil
 }
 
-func (s RuleLimitExceededException) Error() string {
+func (s *RuleLimitExceededException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s RuleLimitExceededException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *RuleLimitExceededException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s RuleLimitExceededException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *RuleLimitExceededException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A sampling rule that services use to decide whether to instrument a request.
@@ -5840,6 +6287,132 @@ func (s *ServiceStatistics) SetTotalResponseTime(v float64) *ServiceStatistics {
 	return s
 }
 
+type Tag struct {
+	_ struct{} `type:"structure"`
+
+	// Key is a required field
+	Key *string `min:"1" type:"string" required:"true"`
+
+	// Value is a required field
+	Value *string `type:"string" required:"true"`
+}
+
+// String returns the string representation
+func (s Tag) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s Tag) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *Tag) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "Tag"}
+	if s.Key == nil {
+		invalidParams.Add(request.NewErrParamRequired("Key"))
+	}
+	if s.Key != nil && len(*s.Key) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("Key", 1))
+	}
+	if s.Value == nil {
+		invalidParams.Add(request.NewErrParamRequired("Value"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetKey sets the Key field's value.
+func (s *Tag) SetKey(v string) *Tag {
+	s.Key = &v
+	return s
+}
+
+// SetValue sets the Value field's value.
+func (s *Tag) SetValue(v string) *Tag {
+	s.Value = &v
+	return s
+}
+
+type TagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+
+	// Tags is a required field
+	Tags []*Tag `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s TagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *TagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "TagResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+	if s.Tags == nil {
+		invalidParams.Add(request.NewErrParamRequired("Tags"))
+	}
+	if s.Tags != nil {
+		for i, v := range s.Tags {
+			if v == nil {
+				continue
+			}
+			if err := v.Validate(); err != nil {
+				invalidParams.AddNested(fmt.Sprintf("%s[%v]", "Tags", i), err.(request.ErrInvalidParams))
+			}
+		}
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *TagResourceInput) SetResourceARN(v string) *TagResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+// SetTags sets the Tags field's value.
+func (s *TagResourceInput) SetTags(v []*Tag) *TagResourceInput {
+	s.Tags = v
+	return s
+}
+
+type TagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s TagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TagResourceOutput) GoString() string {
+	return s.String()
+}
+
 type TelemetryRecord struct {
 	_ struct{} `type:"structure"`
 
@@ -5918,8 +6491,8 @@ func (s *TelemetryRecord) SetTimestamp(v time.Time) *TelemetryRecord {
 
 // The request exceeds the maximum number of requests per second.
 type ThrottledException struct {
-	_            struct{} `type:"structure"`
-	respMetadata protocol.ResponseMetadata
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
 
 	Message_ *string `locationName:"Message" type:"string"`
 }
@@ -5936,17 +6509,17 @@ func (s ThrottledException) GoString() string {
 
 func newErrorThrottledException(v protocol.ResponseMetadata) error {
 	return &ThrottledException{
-		respMetadata: v,
+		RespMetadata: v,
 	}
 }
 
 // Code returns the exception type name.
-func (s ThrottledException) Code() string {
+func (s *ThrottledException) Code() string {
 	return "ThrottledException"
 }
 
 // Message returns the exception's message.
-func (s ThrottledException) Message() string {
+func (s *ThrottledException) Message() string {
 	if s.Message_ != nil {
 		return *s.Message_
 	}
@@ -5954,22 +6527,22 @@ func (s ThrottledException) Message() string {
 }
 
 // OrigErr always returns nil, satisfies awserr.Error interface.
-func (s ThrottledException) OrigErr() error {
+func (s *ThrottledException) OrigErr() error {
 	return nil
 }
 
-func (s ThrottledException) Error() string {
+func (s *ThrottledException) Error() string {
 	return fmt.Sprintf("%s: %s", s.Code(), s.Message())
 }
 
 // Status code returns the HTTP status code for the request's response error.
-func (s ThrottledException) StatusCode() int {
-	return s.respMetadata.StatusCode
+func (s *ThrottledException) StatusCode() int {
+	return s.RespMetadata.StatusCode
 }
 
 // RequestID returns the service's response RequestID for request.
-func (s ThrottledException) RequestID() string {
-	return s.respMetadata.RequestID
+func (s *ThrottledException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A list of TimeSeriesStatistic structures.
@@ -6021,6 +6594,63 @@ func (s *TimeSeriesServiceStatistics) SetServiceSummaryStatistics(v *ServiceStat
 func (s *TimeSeriesServiceStatistics) SetTimestamp(v time.Time) *TimeSeriesServiceStatistics {
 	s.Timestamp = &v
 	return s
+}
+
+type TooManyTagsException struct {
+	_            struct{}                  `type:"structure"`
+	RespMetadata protocol.ResponseMetadata `json:"-" xml:"-"`
+
+	Message_ *string `locationName:"Message" type:"string"`
+
+	ResourceName *string `min:"1" type:"string"`
+}
+
+// String returns the string representation
+func (s TooManyTagsException) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s TooManyTagsException) GoString() string {
+	return s.String()
+}
+
+func newErrorTooManyTagsException(v protocol.ResponseMetadata) error {
+	return &TooManyTagsException{
+		RespMetadata: v,
+	}
+}
+
+// Code returns the exception type name.
+func (s *TooManyTagsException) Code() string {
+	return "TooManyTagsException"
+}
+
+// Message returns the exception's message.
+func (s *TooManyTagsException) Message() string {
+	if s.Message_ != nil {
+		return *s.Message_
+	}
+	return ""
+}
+
+// OrigErr always returns nil, satisfies awserr.Error interface.
+func (s *TooManyTagsException) OrigErr() error {
+	return nil
+}
+
+func (s *TooManyTagsException) Error() string {
+	return fmt.Sprintf("%s: %s\n%s", s.Code(), s.Message(), s.String())
+}
+
+// Status code returns the HTTP status code for the request's response error.
+func (s *TooManyTagsException) StatusCode() int {
+	return s.RespMetadata.StatusCode
+}
+
+// RequestID returns the service's response RequestID for request.
+func (s *TooManyTagsException) RequestID() string {
+	return s.RespMetadata.RequestID
 }
 
 // A collection of segment documents with matching trace IDs.
@@ -6387,6 +7017,71 @@ func (s *UnprocessedTraceSegment) SetMessage(v string) *UnprocessedTraceSegment 
 	return s
 }
 
+type UntagResourceInput struct {
+	_ struct{} `type:"structure"`
+
+	// ResourceARN is a required field
+	ResourceARN *string `min:"1" type:"string" required:"true"`
+
+	// TagKeys is a required field
+	TagKeys []*string `type:"list" required:"true"`
+}
+
+// String returns the string representation
+func (s UntagResourceInput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceInput) GoString() string {
+	return s.String()
+}
+
+// Validate inspects the fields of the type to determine if they are valid.
+func (s *UntagResourceInput) Validate() error {
+	invalidParams := request.ErrInvalidParams{Context: "UntagResourceInput"}
+	if s.ResourceARN == nil {
+		invalidParams.Add(request.NewErrParamRequired("ResourceARN"))
+	}
+	if s.ResourceARN != nil && len(*s.ResourceARN) < 1 {
+		invalidParams.Add(request.NewErrParamMinLen("ResourceARN", 1))
+	}
+	if s.TagKeys == nil {
+		invalidParams.Add(request.NewErrParamRequired("TagKeys"))
+	}
+
+	if invalidParams.Len() > 0 {
+		return invalidParams
+	}
+	return nil
+}
+
+// SetResourceARN sets the ResourceARN field's value.
+func (s *UntagResourceInput) SetResourceARN(v string) *UntagResourceInput {
+	s.ResourceARN = &v
+	return s
+}
+
+// SetTagKeys sets the TagKeys field's value.
+func (s *UntagResourceInput) SetTagKeys(v []*string) *UntagResourceInput {
+	s.TagKeys = v
+	return s
+}
+
+type UntagResourceOutput struct {
+	_ struct{} `type:"structure"`
+}
+
+// String returns the string representation
+func (s UntagResourceOutput) String() string {
+	return awsutil.Prettify(s)
+}
+
+// GoString returns the string representation
+func (s UntagResourceOutput) GoString() string {
+	return s.String()
+}
+
 type UpdateGroupInput struct {
 	_ struct{} `type:"structure"`
 
@@ -6576,6 +7271,14 @@ const (
 	EncryptionStatusActive = "ACTIVE"
 )
 
+// EncryptionStatus_Values returns all elements of the EncryptionStatus enum
+func EncryptionStatus_Values() []string {
+	return []string{
+		EncryptionStatusUpdating,
+		EncryptionStatusActive,
+	}
+}
+
 const (
 	// EncryptionTypeNone is a EncryptionType enum value
 	EncryptionTypeNone = "NONE"
@@ -6583,6 +7286,14 @@ const (
 	// EncryptionTypeKms is a EncryptionType enum value
 	EncryptionTypeKms = "KMS"
 )
+
+// EncryptionType_Values returns all elements of the EncryptionType enum
+func EncryptionType_Values() []string {
+	return []string{
+		EncryptionTypeNone,
+		EncryptionTypeKms,
+	}
+}
 
 const (
 	// SamplingStrategyNamePartialScan is a SamplingStrategyName enum value
@@ -6592,6 +7303,14 @@ const (
 	SamplingStrategyNameFixedRate = "FixedRate"
 )
 
+// SamplingStrategyName_Values returns all elements of the SamplingStrategyName enum
+func SamplingStrategyName_Values() []string {
+	return []string{
+		SamplingStrategyNamePartialScan,
+		SamplingStrategyNameFixedRate,
+	}
+}
+
 const (
 	// TimeRangeTypeTraceId is a TimeRangeType enum value
 	TimeRangeTypeTraceId = "TraceId"
@@ -6599,3 +7318,11 @@ const (
 	// TimeRangeTypeEvent is a TimeRangeType enum value
 	TimeRangeTypeEvent = "Event"
 )
+
+// TimeRangeType_Values returns all elements of the TimeRangeType enum
+func TimeRangeType_Values() []string {
+	return []string{
+		TimeRangeTypeTraceId,
+		TimeRangeTypeEvent,
+	}
+}

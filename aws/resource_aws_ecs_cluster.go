@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ecs"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/terraform-providers/terraform-provider-aws/aws/internal/keyvaluetags"
 )
 
@@ -138,7 +138,7 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 	d.SetId(aws.StringValue(out.Cluster.ClusterArn))
 
 	if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutCreate); err != nil {
-		return err
+		return fmt.Errorf("error waiting for ECS Cluster (%s) creation: %s", d.Id(), err)
 	}
 
 	return resourceAwsEcsClusterRead(d, meta)
@@ -146,6 +146,7 @@ func resourceAwsEcsClusterCreate(d *schema.ResourceData, meta interface{}) error
 
 func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 	conn := meta.(*AWSClient).ecsconn
+	ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
 
 	input := &ecs.DescribeClustersInput{
 		Clusters: []*string{aws.String(d.Id())},
@@ -220,7 +221,7 @@ func resourceAwsEcsClusterRead(d *schema.ResourceData, meta interface{}) error {
 		return fmt.Errorf("error setting setting: %s", err)
 	}
 
-	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(cluster.Tags).IgnoreAws().Map()); err != nil {
+	if err := d.Set("tags", keyvaluetags.EcsKeyValueTags(cluster.Tags).IgnoreAws().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return fmt.Errorf("error setting tags: %s", err)
 	}
 
@@ -244,7 +245,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutUpdate); err != nil {
-			return err
+			return fmt.Errorf("error waiting for ECS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -256,7 +257,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 	}
 
-	if d.HasChange("capacity_providers") || d.HasChange("default_capacity_provider_strategy") {
+	if d.HasChanges("capacity_providers", "default_capacity_provider_strategy") {
 		input := ecs.PutClusterCapacityProvidersInput{
 			Cluster:                         aws.String(d.Id()),
 			CapacityProviders:               expandStringSet(d.Get("capacity_providers").(*schema.Set)),
@@ -287,7 +288,7 @@ func resourceAwsEcsClusterUpdate(d *schema.ResourceData, meta interface{}) error
 		}
 
 		if err = waitForEcsClusterActive(conn, clusterName, ecsClusterTimeoutUpdate); err != nil {
-			return err
+			return fmt.Errorf("error waiting for ECS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -352,6 +353,7 @@ func waitForEcsClusterActive(conn *ecs.ECS, clusterName string, timeout time.Dur
 		Target:  []string{"ACTIVE"},
 		Timeout: timeout,
 		Refresh: refreshEcsClusterStatus(conn, clusterName),
+		Delay:   10 * time.Second,
 	}
 	_, err := stateConf.WaitForState()
 	return err

@@ -10,9 +10,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -337,8 +339,10 @@ func TestAccAWSDynamoDbTable_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "read_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "write_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hash_key", "TestTableHashKey"),
-					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.name", "TestTableHashKey"),
-					resource.TestCheckResourceAttr(resourceName, "attribute.2990477658.type", "S"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "attribute.*", map[string]string{
+						"name": "TestTableHashKey",
+						"type": "S",
+					}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -688,12 +692,21 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2726077800.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2726077800.write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.3405251423.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.3405251423.write_capacity", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"read_capacity":  "1",
+						"write_capacity": "1",
+						"name":           "att1-index",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"read_capacity":  "1",
+						"write_capacity": "1",
+						"name":           "att2-index",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"read_capacity":  "1",
+						"write_capacity": "1",
+						"name":           "att3-index",
+					}),
 				),
 			},
 			{
@@ -706,12 +719,21 @@ func TestAccAWSDynamoDbTable_gsiUpdateCapacity(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.705130498.read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.705130498.write_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1115936309.read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1115936309.write_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.4212014188.read_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.4212014188.write_capacity", "2"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"read_capacity":  "2",
+						"write_capacity": "2",
+						"name":           "att1-index",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"read_capacity":  "2",
+						"write_capacity": "2",
+						"name":           "att2-index",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"read_capacity":  "2",
+						"write_capacity": "2",
+						"name":           "att3-index",
+					}),
 				),
 			},
 		},
@@ -733,27 +755,33 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2726077800.hash_key", "att3"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2726077800.name", "att3-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2726077800.non_key_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2726077800.projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2726077800.range_key", ""),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2726077800.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2726077800.write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.hash_key", "att1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.name", "att1-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.non_key_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.range_key", ""),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.3405251423.hash_key", "att2"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.3405251423.name", "att2-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.3405251423.non_key_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.3405251423.projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.3405251423.range_key", ""),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.3405251423.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.3405251423.write_capacity", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att3",
+						"name":                 "att3-index",
+						"non_key_attributes.#": "0",
+						"projection_type":      "ALL",
+						"range_key":            "",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att1",
+						"name":                 "att1-index",
+						"non_key_attributes.#": "0",
+						"projection_type":      "ALL",
+						"range_key":            "",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att2",
+						"name":                 "att2-index",
+						"non_key_attributes.#": "0",
+						"projection_type":      "ALL",
+						"range_key":            "",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
 				),
 			},
 			{
@@ -766,28 +794,34 @@ func TestAccAWSDynamoDbTable_gsiUpdateOtherAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.hash_key", "att4"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.name", "att2-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.non_key_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.range_key", "att2"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.hash_key", "att3"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.name", "att3-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.non_key_attributes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.non_key_attributes.0", "RandomAttribute"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.projection_type", "INCLUDE"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.range_key", "att4"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.hash_key", "att1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.name", "att1-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.non_key_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.range_key", ""),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.write_capacity", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att4",
+						"name":                 "att2-index",
+						"non_key_attributes.#": "0",
+						"projection_type":      "ALL",
+						"range_key":            "att2",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att3",
+						"name":                 "att3-index",
+						"non_key_attributes.#": "1",
+						"non_key_attributes.0": "RandomAttribute",
+						"projection_type":      "INCLUDE",
+						"range_key":            "att4",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att1",
+						"name":                 "att1-index",
+						"non_key_attributes.#": "0",
+						"projection_type":      "ALL",
+						"range_key":            "",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
 				),
 			},
 		},
@@ -810,28 +844,34 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.hash_key", "att4"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.name", "att2-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.non_key_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.range_key", "att2"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.hash_key", "att3"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.name", "att3-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.non_key_attributes.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.non_key_attributes.0", "RandomAttribute"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.projection_type", "INCLUDE"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.range_key", "att4"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.2311632778.write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.hash_key", "att1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.name", "att1-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.non_key_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.range_key", ""),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.write_capacity", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att4",
+						"name":                 "att2-index",
+						"non_key_attributes.#": "0",
+						"projection_type":      "ALL",
+						"range_key":            "att2",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att3",
+						"name":                 "att3-index",
+						"non_key_attributes.#": "1",
+						"non_key_attributes.0": "RandomAttribute",
+						"projection_type":      "INCLUDE",
+						"range_key":            "att4",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att1",
+						"name":                 "att1-index",
+						"non_key_attributes.#": "0",
+						"projection_type":      "ALL",
+						"range_key":            "",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
 				),
 			},
 			{
@@ -843,30 +883,35 @@ func TestAccAWSDynamoDbTable_gsiUpdateNonKeyAttributes(t *testing.T) {
 				Config: testAccAWSDynamoDbConfigGsiUpdatedNonKeyAttributes(name),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.#", "3"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.hash_key", "att4"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.name", "att2-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.non_key_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.range_key", "att2"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1182392663.write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.102175821.hash_key", "att3"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.102175821.name", "att3-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.102175821.non_key_attributes.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.102175821.non_key_attributes.0", "RandomAttribute"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.102175821.non_key_attributes.1", "AnotherAttribute"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.102175821.projection_type", "INCLUDE"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.102175821.range_key", "att4"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.102175821.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.102175821.write_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.hash_key", "att1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.name", "att1-index"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.non_key_attributes.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.projection_type", "ALL"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.range_key", ""),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.read_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "global_secondary_index.1937107206.write_capacity", "1"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att4",
+						"name":                 "att2-index",
+						"non_key_attributes.#": "0",
+						"projection_type":      "ALL",
+						"range_key":            "att2",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att3",
+						"name":                 "att3-index",
+						"non_key_attributes.#": "2",
+						"non_key_attributes.0": "RandomAttribute",
+						"non_key_attributes.1": "AnotherAttribute",
+						"projection_type":      "INCLUDE",
+						"range_key":            "att4",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "global_secondary_index.*", map[string]string{
+						"hash_key":             "att1",
+						"name":                 "att1-index",
+						"non_key_attributes.#": "0",
+						"projection_type":      "ALL",
+						"range_key":            "",
+						"read_capacity":        "1",
+						"write_capacity":       "1",
+					}),
 				),
 			},
 		},
@@ -1382,6 +1427,96 @@ func testAccCheckAWSDynamoDbTableDisappears(table *dynamodb.DescribeTableOutput)
 	}
 }
 
+func TestAccAWSDynamoDbTable_Replica_Multiple(t *testing.T) {
+	var table dynamodb.DescribeTableOutput
+	var providers []*schema.Provider
+	resourceName := "aws_dynamodb_table.test"
+	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 3)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica2(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+				),
+			},
+			{
+				Config:            testAccAWSDynamoDbTableConfigReplica2(tableName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica0(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica2(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &table),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "2"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccAWSDynamoDbTable_Replica_Single(t *testing.T) {
+	var conf dynamodb.DescribeTableOutput
+	var providers []*schema.Provider
+	resourceName := "aws_dynamodb_table.test"
+	tableName := acctest.RandomWithPrefix("TerraformTestTable-")
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheck(t)
+			testAccMultipleRegionPreCheck(t, 2)
+		},
+		ProviderFactories: testAccProviderFactories(&providers),
+		CheckDestroy:      testAccCheckAWSDynamoDbTableDestroy,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica1(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+				),
+			},
+			{
+				Config:            testAccAWSDynamoDbTableConfigReplica1(tableName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica0(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "0"),
+				),
+			},
+			{
+				Config: testAccAWSDynamoDbTableConfigReplica1(tableName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInitialAWSDynamoDbTableExists(resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "replica.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func dynamoDbGetGSIIndex(gsiList *[]*dynamodb.GlobalSecondaryIndexDescription, target string) int {
 	for idx, gsiObject := range *gsiList {
 		if *gsiObject.IndexName == target {
@@ -1620,8 +1755,8 @@ resource "aws_dynamodb_table" "test" {
   }
 
   server_side_encryption {
-	enabled     = true
-	kms_key_arn = "${aws_kms_key.test.arn}"
+    enabled     = true
+    kms_key_arn = aws_kms_key.test.arn
   }
 }
 `, rName)
@@ -1755,8 +1890,8 @@ variable "capacity" {
 
 resource "aws_dynamodb_table" "test" {
   name           = "tf-acc-test-%s"
-  read_capacity  = "${var.capacity}"
-  write_capacity = "${var.capacity}"
+  read_capacity  = var.capacity
+  write_capacity = var.capacity
   hash_key       = "id"
 
   attribute {
@@ -1782,24 +1917,24 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name            = "att1-index"
     hash_key        = "att1"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
   global_secondary_index {
     name            = "att2-index"
     hash_key        = "att2"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
   global_secondary_index {
     name            = "att3-index"
     hash_key        = "att3"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 }
@@ -1814,8 +1949,8 @@ variable "capacity" {
 
 resource "aws_dynamodb_table" "test" {
   name           = "tf-acc-test-%s"
-  read_capacity  = "${var.capacity}"
-  write_capacity = "${var.capacity}"
+  read_capacity  = var.capacity
+  write_capacity = var.capacity
   hash_key       = "id"
 
   attribute {
@@ -1841,24 +1976,24 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name            = "att1-index"
     hash_key        = "att1"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
   global_secondary_index {
     name            = "att2-index"
     hash_key        = "att2"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
   global_secondary_index {
     name            = "att3-index"
     hash_key        = "att3"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 }
@@ -1873,8 +2008,8 @@ variable "capacity" {
 
 resource "aws_dynamodb_table" "test" {
   name           = "tf-acc-test-%s"
-  read_capacity  = "${var.capacity}"
-  write_capacity = "${var.capacity}"
+  read_capacity  = var.capacity
+  write_capacity = var.capacity
   hash_key       = "id"
 
   attribute {
@@ -1905,8 +2040,8 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name            = "att1-index"
     hash_key        = "att1"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
@@ -1914,8 +2049,8 @@ resource "aws_dynamodb_table" "test" {
     name            = "att2-index"
     hash_key        = "att4"
     range_key       = "att2"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
@@ -1923,8 +2058,8 @@ resource "aws_dynamodb_table" "test" {
     name               = "att3-index"
     hash_key           = "att3"
     range_key          = "att4"
-    write_capacity     = "${var.capacity}"
-    read_capacity      = "${var.capacity}"
+    write_capacity     = var.capacity
+    read_capacity      = var.capacity
     projection_type    = "INCLUDE"
     non_key_attributes = ["RandomAttribute"]
   }
@@ -1940,8 +2075,8 @@ variable "capacity" {
 
 resource "aws_dynamodb_table" "test" {
   name           = "tf-acc-test-%s"
-  read_capacity  = "${var.capacity}"
-  write_capacity = "${var.capacity}"
+  read_capacity  = var.capacity
+  write_capacity = var.capacity
   hash_key       = "id"
 
   attribute {
@@ -1972,8 +2107,8 @@ resource "aws_dynamodb_table" "test" {
   global_secondary_index {
     name            = "att1-index"
     hash_key        = "att1"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
@@ -1981,8 +2116,8 @@ resource "aws_dynamodb_table" "test" {
     name            = "att2-index"
     hash_key        = "att4"
     range_key       = "att2"
-    write_capacity  = "${var.capacity}"
-    read_capacity   = "${var.capacity}"
+    write_capacity  = var.capacity
+    read_capacity   = var.capacity
     projection_type = "ALL"
   }
 
@@ -1990,8 +2125,8 @@ resource "aws_dynamodb_table" "test" {
     name               = "att3-index"
     hash_key           = "att3"
     range_key          = "att4"
-    write_capacity     = "${var.capacity}"
-    read_capacity      = "${var.capacity}"
+    write_capacity     = var.capacity
+    read_capacity      = var.capacity
     projection_type    = "INCLUDE"
     non_key_attributes = ["RandomAttribute", "AnotherAttribute"]
   }
@@ -2082,4 +2217,85 @@ resource "aws_dynamodb_table" "test" {
   }
 }
 `, rName, attrName1, attrType1, attrName2, attrType2, hashKey, rangeKey)
+}
+
+func testAccAWSDynamoDbTableConfigReplica0(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3), // Prevent "Provider configuration not present" errors
+		fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name            = %[1]q
+  hash_key        = "TestTableHashKey"
+  billing_mode    = "PAY_PER_REQUEST"
+  stream_enabled  = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+}
+`, rName))
+}
+
+func testAccAWSDynamoDbTableConfigReplica1(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3), // Prevent "Provider configuration not present" errors
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = data.aws_region.alternate.name
+  }
+}
+`, rName))
+}
+
+func testAccAWSDynamoDbTableConfigReplica2(rName string) string {
+	return composeConfig(
+		testAccMultipleRegionProviderConfig(3),
+		fmt.Sprintf(`
+data "aws_region" "alternate" {
+  provider = "awsalternate"
+}
+
+data "aws_region" "third" {
+  provider = "awsthird"
+}
+
+resource "aws_dynamodb_table" "test" {
+  name             = %[1]q
+  hash_key         = "TestTableHashKey"
+  billing_mode     = "PAY_PER_REQUEST"
+  stream_enabled   = true
+  stream_view_type = "NEW_AND_OLD_IMAGES"
+
+  attribute {
+    name = "TestTableHashKey"
+    type = "S"
+  }
+
+  replica {
+    region_name = data.aws_region.alternate.name
+  }
+
+  replica {
+    region_name = data.aws_region.third.name
+  }
+}
+`, rName))
 }

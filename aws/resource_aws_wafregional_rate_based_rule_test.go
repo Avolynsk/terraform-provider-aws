@@ -9,10 +9,11 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/terraform-providers/terraform-provider-aws/aws/internal/tfawsresource"
 )
 
 func init() {
@@ -271,8 +272,10 @@ func TestAccAWSWafRegionalRateBasedRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					computeWafRegionalRateBasedRulePredicateWithIpSet(&ipset, false, "IPMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.negated", &idx, "false"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.type", &idx, "IPMatch"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+						"negated": "false",
+						"type":    "IPMatch",
+					}),
 				),
 			},
 			{
@@ -283,8 +286,10 @@ func TestAccAWSWafRegionalRateBasedRule_changePredicates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", ruleName),
 					resource.TestCheckResourceAttr(resourceName, "predicate.#", "1"),
 					computeWafRegionalRateBasedRulePredicateWithByteMatchSet(&byteMatchSet, true, "ByteMatch", &idx),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.negated", &idx, "true"),
-					testCheckResourceAttrWithIndexesAddr(resourceName, "predicate.%d.type", &idx, "ByteMatch"),
+					tfawsresource.TestCheckTypeSetElemNestedAttrs(resourceName, "predicates.*", map[string]string{
+						"negated": "true",
+						"type":    "ByteMatch",
+					}),
 				),
 			},
 			{
@@ -528,7 +533,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -554,7 +559,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -584,7 +589,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -615,7 +620,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicate {
-    data_id = "${aws_wafregional_ipset.ipset.id}"
+    data_id = aws_wafregional_ipset.ipset.id
     negated = false
     type    = "IPMatch"
   }
@@ -656,7 +661,7 @@ resource "aws_wafregional_rate_based_rule" "wafrule" {
   rate_limit  = 2000
 
   predicate {
-    data_id = "${aws_wafregional_byte_match_set.set.id}"
+    data_id = aws_wafregional_byte_match_set.set.id
     negated = true
     type    = "ByteMatch"
   }

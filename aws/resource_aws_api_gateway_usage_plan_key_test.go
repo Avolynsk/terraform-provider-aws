@@ -8,9 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
 )
 
 func TestAccAWSAPIGatewayUsagePlanKey_basic(t *testing.T) {
@@ -84,7 +84,7 @@ func TestAccAWSAPIGatewayUsagePlanKey_disappears(t *testing.T) {
 				Config: testAccAWSApiGatewayUsagePlanKeyBasicConfig(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAWSAPIGatewayUsagePlanKeyExists(resourceName, &conf),
-					testAccCheckAWSAPIGatewayUsagePlanKeyDisappears(resourceName),
+					testAccCheckResourceDisappears(testAccProvider, resourceAwsApiGatewayUsagePlanKey(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -103,7 +103,7 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyExists(n string, res *apigateway.Usage
 			return fmt.Errorf("No API Gateway Usage Plan Key ID is set")
 		}
 
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
+		conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 		req := &apigateway.GetUsagePlanKeyInput{
 			UsagePlanId: aws.String(rs.Primary.Attributes["usage_plan_id"]),
@@ -127,7 +127,7 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyExists(n string, res *apigateway.Usage
 }
 
 func testAccCheckAWSAPIGatewayUsagePlanKeyDestroy(s *terraform.State) error {
-	conn := testAccProvider.Meta().(*AWSClient).apigateway
+	conn := testAccProvider.Meta().(*AWSClient).apigatewayconn
 
 	for _, rs := range s.RootModule().Resources {
 		if rs.Type != "aws_api_gateway_usage_plan_key" {
@@ -158,28 +158,6 @@ func testAccCheckAWSAPIGatewayUsagePlanKeyDestroy(s *terraform.State) error {
 	}
 
 	return nil
-}
-
-func testAccCheckAWSAPIGatewayUsagePlanKeyDisappears(resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No resource ID is set")
-		}
-		conn := testAccProvider.Meta().(*AWSClient).apigateway
-
-		input := &apigateway.DeleteUsagePlanKeyInput{
-			KeyId:       aws.String(rs.Primary.ID),
-			UsagePlanId: aws.String(rs.Primary.Attributes["usage_plan_id"]),
-		}
-		_, err := conn.DeleteUsagePlanKey(input)
-
-		return err
-	}
 }
 
 func testAccCheckAWSAPIGatewayUsagePlanKeyImportStateIdFunc(resourceName string) resource.ImportStateIdFunc {
@@ -237,7 +215,7 @@ resource "aws_api_gateway_integration_response" "test" {
 }
 
 resource "aws_api_gateway_deployment" "test" {
-  depends_on = ["aws_api_gateway_integration.test"]
+  depends_on = [aws_api_gateway_integration.test]
 
   rest_api_id = "${aws_api_gateway_rest_api.test.id}"
   stage_name = "test"

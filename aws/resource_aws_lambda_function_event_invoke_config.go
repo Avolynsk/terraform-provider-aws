@@ -9,9 +9,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/helper/validation"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceAwsLambdaFunctionEventInvokeConfig() *schema.Resource {
@@ -123,6 +123,11 @@ func resourceAwsLambdaFunctionEventInvokeConfigCreate(d *schema.ResourceData, me
 			return resource.RetryableError(err)
 		}
 
+		// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
+		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
+			return resource.RetryableError(err)
+		}
+
 		if err != nil {
 			return resource.NonRetryableError(err)
 		}
@@ -213,6 +218,11 @@ func resourceAwsLambdaFunctionEventInvokeConfigUpdate(d *schema.ResourceData, me
 
 		// InvalidParameterValueException: The destination ARN arn:PARTITION:SERVICE:REGION:ACCOUNT:RESOURCE is invalid.
 		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "destination ARN") {
+			return resource.RetryableError(err)
+		}
+
+		// InvalidParameterValueException: The function's execution role does not have permissions to call Publish on arn:...
+		if isAWSErr(err, lambda.ErrCodeInvalidParameterValueException, "does not have permissions") {
 			return resource.RetryableError(err)
 		}
 
